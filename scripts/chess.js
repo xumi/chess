@@ -132,40 +132,23 @@ Chess.prototype.updateEvents = function(){
     helper:         "clone",
     zIndex:         5,
     addClasses:     false,
-    start:          function(ui,event){
-      currentPiece = $(ui.currentTarget);
-      _this.setOrientation();
-      currentPiece.addClass('moved');
+    start:          function(ui, event){
+      return _this.eventCallback('pieceDragStart', event, ui);
     },
-    stop:           function(){
-      currentPiece.removeClass('moved');
-      _this.setOrientation();
-      currentPiece = false;
+    stop:           function(ui, event){
+      return _this.eventCallback('pieceDragStop', event, ui);
+    },
+    drag:          function(ui, event){
+      return _this.eventCallback('pieceDrag', event, ui);
     }
   });
-  this.getCells().droppable({
+  var droppables = this.getCells().add(this.trash);
+  droppables.droppable({
     accept: allPieces,
     addClasses : false,
     hoverClass: 'pieceOver',
     drop: function(event, ui){
-      var cell = $(this);
-      var data = currentPiece.data();
-      var previousCell = currentPiece.parents('.cell');
-      currentPiece.remove();
-      _this.setPieceOnCell(cell,data);
-      _this.updateCell(previousCell);
-    }
-  });
-  this.trash.droppable({
-    accept: allPieces,
-    hoverClass: 'pieceOver',
-    drop: function(event, ui){
-      var data = currentPiece.data();
-      var previousCell = currentPiece.parents('.cell');
-      currentPiece.remove();
-      _this.updateCell(previousCell);
-      _this.setPieceOn(_this.trash,data);
-        
+      return _this.eventCallback('pieceDrop', event, ui);
     }
   });
   return this;
@@ -183,20 +166,11 @@ Chess.prototype.createCellMenu = function(){
   this.container.append('<div class="cellmenu"><div class="background"></div><div class="content"></div></div>');
   var cellmenu = this.container.find('.cellmenu');
   var cellmenuContent = cellmenu.find('.content');
-  cellmenuContent.on('click','.clear button',function(){
-    _this.clearCell(_this.currentCell);
-    _this.currentCell.removeClass('selected');
-    _this.currentCell = false;
-    _this.container.find('.cellmenu').hide();
+  cellmenuContent.on('click','.clear button',function(event){
+    _this.eventCallback('cellClear', event);
   });
-  cellmenuContent.on('click','.piece',function(){
-    var data = $(this).data();
-    _this.setPieceOnCell(_this.currentCell, data);
-    _this.currentCell.removeClass('selected');
-    _this.currentCell = false;
-    _this.container.find('.cellmenu').hide();
-    _this.updateEvents();
-    _this.setOrientation();
+  cellmenuContent.on('click','.piece',function(event){
+    _this.eventCallback('cellPopulate', event);    
   });
     
   var html = '';
@@ -404,6 +378,71 @@ Chess.prototype.getCellCoords = function(cell){
   }
   return false;
 };
+// ------------------------------------------------------------
+// Events
+// ------------------------------------------------------------
+Chess.prototype.eventCallback = function(type, event, ui){
+  var _this = this;
+  switch(type){
+    case 'pieceDragStart':  return this.onPieceDragStart(event,ui);
+    case 'pieceDragStop':   return this.onPieceDragStop(event,ui);
+    case 'pieceDrag':       return this.onPieceDrag(event,ui);
+    case 'pieceDrop':       return this.onPieceDrop(event,ui);
+    case 'cellClear':       return this.onCellClear(event);;
+    case 'cellPopulate':    return this.onCellPopulate(event);
+  }
+};
+// ------------------------------------------------------------
+Chess.prototype.onPieceDragStart = function(event, ui){
+  this.currentPiece = $(ui.currentTarget);
+  this.setOrientation();
+  this.currentPiece.addClass('moved');
+  return true;
+};
+
+Chess.prototype.onPieceDragStop = function(event,ui){
+  this.currentPiece.removeClass('moved');
+  this.setOrientation();
+  this.currentPiece = false;
+  return true;
+};
+
+Chess.prototype.onPieceDrag = function(event,ui){
+  return true;
+};
+
+Chess.prototype.onPieceDrop = function(event,ui){
+  var target = $(event.target);
+  var data = this.currentPiece.data();
+  var previousCell = this.currentPiece.parents('.cell');
+  this.currentPiece.remove();
+  if(target.is('.cell')){
+    this.setPieceOnCell(target,data);
+  }else if(target.is('.trash')){
+    this.setPieceOn(this.trash,data);
+  }
+  this.updateCell(previousCell);
+  return true;
+};
+
+Chess.prototype.onCellClear = function(event){
+  this.clearCell(this.currentCell);
+  this.currentCell.removeClass('selected');
+  this.currentCell = false;
+  this.container.find('.cellmenu').hide();
+};
+
+Chess.prototype.onCellPopulate = function(event){
+  var data = $(event.target).data();
+  this.setPieceOnCell(this.currentCell, data);
+  this.currentCell.removeClass('selected');
+  this.currentCell = false;
+  this.container.find('.cellmenu').hide();
+  this.updateEvents();
+  this.setOrientation();
+  return true;
+}
+
 // ------------------------------------------------------------
 // Helpers
 // ------------------------------------------------------------
