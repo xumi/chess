@@ -1,5 +1,30 @@
 function ChessView(controller){
   this.controller = controller;
+  this.container  = controller.container;
+}
+// ------------------------------------------------------------
+ChessView.DEFAULT_PIECE_SIZE = 58;
+// ------------------------------------------------------------
+ChessView.prototype.getCells = function(){
+  return this.container.find('.cell');
+};
+ChessView.prototype.getPieces = function(){
+  return this.getCells().find('.piece');
+};
+ChessView.prototype.rotate = function(degres, animate){
+  if(degres==0) return;
+  this.controller.degres = degres;
+  this.rotateElement(this.container.find('.cells'),degres, animate);
+  this.rotateElement(this.getPieces(),degres*-1, animate);
+  // For the Drag&Drop Clone
+  this.rotateElement(this.container.find('.ui-draggable-dragging'),0, animate);
+  return this;
+};
+ChessView.prototype.rotateElement = function(element, degres, animate){
+  $(element).css('transform','rotate('+degres+'deg)');
+};
+ChessView.prototype.clearCell = function(cell){
+  cell.find('> .pieces').empty();
 }
 // ------------------------------------------------------------
 ChessView.prototype.appendHTML = function(){
@@ -19,7 +44,7 @@ ChessView.prototype.appendHTML = function(){
     }else left += 12.5;
   }
   html += '</div>';
-  this.controller.container.html(html);
+  this.container.html(html);
 };
 
 ChessView.prototype.addHelper = function(){
@@ -40,13 +65,14 @@ ChessView.prototype.addHelper = function(){
   html += '<div class="trash"></div>';
   // End of turn button (switching side)
   html += '<button class="endOfTurn">End of Turn</button>';
-  this.controller.container.append(html);
+  this.container.append(html);
 };
+
 ChessView.prototype.createCellMenu = function(){
   var controller = this.controller;
   var html = '<div class="cellmenu"><div class="background"></div><div class="content"></div></div>';
-  controller.container.append(html);
-  var cellmenu = controller.container.find('.cellmenu');
+  this.container.append(html);
+  var cellmenu = this.container.find('.cellmenu');
   html = '';
   html += '<div class="clear">';
   html += '<button data-action="clear">Clear</button>';
@@ -66,3 +92,28 @@ ChessView.prototype.createCellMenu = function(){
   return this;
 }
 // ------------------------------------------------------------
+ChessView.prototype.setPieceOn = function(on,data){
+  var html = '<div class="piece '+data.alias+' '+data.side+'" id="item'+(++this.controller.counter)+'"></div>';
+  if(on.is('.cell')){
+      return $(html).appendTo(on.find('.pieces'));
+  }
+  return $(html).appendTo(this.controller.trash);
+};
+
+ChessView.prototype.updateCell = function(cell){
+  var pieces = cell.find('.pieces .piece');
+  var amount = pieces.length;
+  var ratio    = 1;
+  var previous = 1;
+  for(var i=1;i<100;i++){ // 1000 pieces on a cell is enough I think
+    var sq = i*i;
+    if(amount>previous && amount<sq+1){
+      ratio = i;
+      break;
+    }
+    previous = sq;
+  }
+  var size = parseInt(ChessView.DEFAULT_PIECE_SIZE/ratio);
+  pieces.width(size).height(size);
+  return this.controller;
+};

@@ -7,7 +7,7 @@ function Chess(container, assetsPath, onReady){
   this.initialized  = false;
   this.trash        = false;
   this.side         = false;
-  this.degres       = (this.side=='black') ? 180 : 0;
+  this.degres       = false;
   this.counter      = 0;
   this.theme        = 'classic';
   this.loadedThemes = {};
@@ -20,7 +20,6 @@ function Chess(container, assetsPath, onReady){
   });;
 }
 // ------------------------------------------------------------
-Chess.DEFAULT_PIECE_SIZE = 58;
 Chess.ID        = 0;
 Chess.LETTERS   = ['A','B','C','D','E','F','G','H'];
 Chess.NUMBERS   = [1,2,3,4,5,6,7,8];
@@ -28,8 +27,9 @@ Chess.PIECES    = ['king','queen','tower','bishop','knight','pawn'];
 Chess.VIEW_PATH = 'scripts/chess.view';
 // ------------------------------------------------------------
 Chess.prototype.start = function(side){
-  this.view = new ChessView(this);
-  this.side = side=='black'?'black':'white';
+  this.view   = new ChessView(this);
+  this.side   = side=='black'?'black':'white';
+  this.degres = (this.side=='black') ? 180 : 0;
   this.addStylesheet('css/chess');
   this.refreshClasses();
   this.view.appendHTML();
@@ -41,7 +41,7 @@ Chess.prototype.start = function(side){
   this.container.addClass('ready');
   this.ready = true;
   return this;
-}
+};
 
 Chess.prototype.refreshClasses = function(){
   this.container.removeAttr('class');
@@ -50,7 +50,7 @@ Chess.prototype.refreshClasses = function(){
   if(this.ready) this.container.addClass('ready');
   if(this.theme) this.container.addClass(this.theme);
   return this;
-}
+};
 
 Chess.prototype.setAssetsPath = function(path){
   this.assetsPath = path;
@@ -79,54 +79,7 @@ Chess.prototype.addHelper = function(){
   this.view.addHelper();
   this.trash = this.container.find('.trash');
   return this;
-}
-  
-Chess.prototype.addEvents = function(){
-  var _this = this;
-  this.container.on('dblclick','.cell',function(){
-    if(_this.currentCell) return false;
-    _this.currentCell  = $(this);
-    _this.currentCell.addClass('selected');
-    _this.openCellMenu();
-  });
-  this.container.on('click','.endOfTurn',function(event){
-    return _this.eventCallback('endOfTurn', event);
-  });
-  this.updateEvents();
-  this.setOrientation();
-  return this;
 };
-  
-Chess.prototype.updateEvents = function(){
-  var _this = this;
-  // Includes trash
-  var allPieces = this.container.find('.cells, .helper').find('.piece');
-  allPieces.draggable({
-    appendTo:       _this.container,
-    helper:         "clone",
-    zIndex:         5,
-    addClasses:     false,
-    start:          function(ui, event){
-      return _this.eventCallback('pieceDragStart', event, ui);
-    },
-    stop:           function(ui, event){
-      return _this.eventCallback('pieceDragStop', event, ui);
-    },
-    drag:          function(ui, event){
-      return _this.eventCallback('pieceDrag', event, ui);
-    }
-  });
-  var droppables = this.getCells().add(this.trash);
-  droppables.droppable({
-    accept: allPieces,
-    addClasses : false,
-    hoverClass: 'pieceOver',
-    drop: function(event, ui){
-      return _this.eventCallback('pieceDrop', event, ui);
-    }
-  });
-  return this;
-}
   
 Chess.prototype.openCellMenu = function(){
   var _this = this;
@@ -218,7 +171,7 @@ Chess.prototype.setOnBoard = function(data){
 };
   
 Chess.prototype.clearCell = function(cell){
-  cell.find('> .pieces').empty();
+  this.view.clearCell(cell);
   return this;
 };
   
@@ -228,40 +181,17 @@ Chess.prototype.setPieceOnCell = function(cell, data){
 };
   
 Chess.prototype.setPieceOn = function(on,data){
-  var html = '<div class="piece '+data.alias+' '+data.side+'" id="item'+(++this.counter)+'"></div>';
-  if(on.is('.cell')){
-      var piece = $(html).appendTo(on.find('.pieces'));
-      this.updateCell(on);
-  }else{
-    var piece = $(html).appendTo(this.trash);
-  }
+  var piece = this.view.setPieceOn(on,data);
+  if(on.is('.cell')) this.view.updateCell(on);
   piece.data(data);
   this.updateEvents();
-  return this;
-};
-  
-Chess.prototype.updateCell = function(cell){
-  var pieces = cell.find('.pieces .piece');
-  var amount = pieces.length;
-  var ratio    = 1;
-  var previous = 1;
-  for(var i=1;i<100;i++){ // 1000 pieces on a cell is enough I think
-    var sq = i*i;
-    if(amount>previous && amount<sq+1){
-      ratio = i;
-      break;
-    }
-    previous = sq;
-  }
-  var size = parseInt(Chess.DEFAULT_PIECE_SIZE/ratio);
-  pieces.width(size).height(size);
   return this;
 };
   
 Chess.prototype.serialize = function(){
   var board = {'white': [],'black': []};
   var _this = this;
-  this.getCells().each(function(){
+  this.view.getCells().each(function(){
     var cell = $(this);
     var piece = $(this).find('.piece');
     if(piece.length==0) return true;
@@ -273,13 +203,6 @@ Chess.prototype.serialize = function(){
   return board;
 };
   
-Chess.prototype.getPieces = function(){
-  return this.getCells().find('.piece');
-}
-  
-Chess.prototype.getCells = function(){
-  return this.container.find('.cell');
-}
   
 Chess.prototype.getNumbers = function(side){
   if(!side) side = this.side
@@ -302,26 +225,12 @@ Chess.prototype.switchSide = function(){
 };
   
 Chess.prototype.setOrientation = function(){
-  this.rotate(this.degres);
+  this.view.rotate(this.degres);
   return this;
-};
-  
-Chess.prototype.rotate = function(degres, animate){
-  if(degres==0) return;
-  this.degres = degres;
-  this.rotateElement(this.container.find('.cells'),degres, animate);
-  this.rotateElement(this.getPieces(),degres*-1, animate);
-  // For the Drag&Drop Clone
-  this.rotateElement(this.container.find('.ui-draggable-dragging'),0, animate);
-  return this;
-};
-
-Chess.prototype.rotateElement = function(element, degres, animate){
-  $(element).css('transform','rotate('+degres+'deg)');
 };
   
 Chess.prototype.getCellCoords = function(cell){
-  var index = this.getCells().index(cell);
+  var index = this.view.getCells().index(cell);
   var number = 0;
   var letter = 0;
   for(var i=0;i<this.getNumbers().length*this.getLetters().length;i++){
@@ -336,6 +245,53 @@ Chess.prototype.getCellCoords = function(cell){
 };
 // ------------------------------------------------------------
 // Events
+// ------------------------------------------------------------
+Chess.prototype.addEvents = function(){
+  var _this = this;
+  this.container.on('dblclick','.cell',function(){
+    if(_this.currentCell) return false;
+    _this.currentCell  = $(this);
+    _this.currentCell.addClass('selected');
+    _this.openCellMenu();
+  });
+  this.container.on('click','.endOfTurn',function(event){
+    return _this.eventCallback('endOfTurn', event);
+  });
+  this.updateEvents();
+  this.setOrientation();
+  return this;
+};
+  
+Chess.prototype.updateEvents = function(){
+  var _this = this;
+  // Includes trash
+  var allPieces = this.container.find('.cells, .helper').find('.piece');
+  allPieces.draggable({
+    appendTo:       _this.container,
+    helper:         "clone",
+    zIndex:         5,
+    addClasses:     false,
+    start:          function(ui, event){
+      return _this.eventCallback('pieceDragStart', event, ui);
+    },
+    stop:           function(ui, event){
+      return _this.eventCallback('pieceDragStop', event, ui);
+    },
+    drag:          function(ui, event){
+      return _this.eventCallback('pieceDrag', event, ui);
+    }
+  });
+  var droppables = this.view.getCells().add(this.trash);
+  droppables.droppable({
+    accept: allPieces,
+    addClasses : false,
+    hoverClass: 'pieceOver',
+    drop: function(event, ui){
+      return _this.eventCallback('pieceDrop', event, ui);
+    }
+  });
+  return this;
+};
 // ------------------------------------------------------------
 Chess.prototype.eventCallback = function(type, event, ui){
   var _this = this;
@@ -378,7 +334,7 @@ Chess.prototype.onPieceDrop = function(event,ui){
   }else if(target.is('.trash')){
     this.setPieceOn(this.trash,data);
   }
-  this.updateCell(previousCell);
+  this.view.updateCell(previousCell);
   return true;
 };
 
