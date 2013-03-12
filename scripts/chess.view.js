@@ -1,7 +1,7 @@
 function ChessView(controller){
   this.controller = controller;
 }
-
+// ------------------------------------------------------------
 ChessView.prototype.appendHTML = function(){
   var html    = '<div class="cells">';
   var bottom  = 0;
@@ -21,3 +21,25 @@ ChessView.prototype.appendHTML = function(){
   html += '</div>';
   this.controller.container.html(html);
 };
+
+ChessView.prototype.addHelper = function(){
+  var html = '<div class="helper">';
+  var controller = this.controller;
+  $(['white','black']).each(function(){
+    var side = this;
+    html += '<div class="'+side+'">';
+    html += '<div class="letters">';
+    $(controller.getLetters(side)).each(function(){html += '<div>'+this+'</div>';});
+    html += '</div>';
+    html += '<div class="numbers">';
+    $(controller.getNumbers(side)).each(function(){html += '<div>'+this+'</div>';});
+    html += '</div>';
+    html += '</div>';
+  });
+  // The pieces trash
+  html += '<div class="trash"></div>';
+  // End of turn button (switching side)
+  html += '<button class="endOfTurn">End of Turn</button>';
+  this.controller.container.append(html);
+}
+// ------------------------------------------------------------

@@ -76,24 +76,7 @@ Chess.prototype.applyTheme = function(t){
 };
     
 Chess.prototype.addHelper = function(){
-  var html = '<div class="helper">';
-  var _this = this;
-  $(['white','black']).each(function(){
-    var side = this;
-    html += '<div class="'+side+'">';
-    html += '<div class="letters">';
-    $(_this.getLetters(side)).each(function(){html += '<div>'+this+'</div>';});
-    html += '</div>';
-    html += '<div class="numbers">';
-    $(_this.getNumbers(side)).each(function(){html += '<div>'+this+'</div>';});
-    html += '</div>';
-    html += '</div>';
-  });
-  // The pieces trash
-  html += '<div class="trash"></div>';
-  // End of turn button (switching side)
-  html += '<button class="endOfTurn">End of Turn</button>';
-  this.container.append(html);
+  this.view.addHelper();
   this.trash = this.container.find('.trash');
   return this;
 }
@@ -106,7 +89,9 @@ Chess.prototype.addEvents = function(){
     _this.currentCell.addClass('selected');
     _this.openCellMenu();
   });
-  this.container.on('click','.endOfTurn',function(){_this.switchSide();});
+  this.container.on('click','.endOfTurn',function(event){
+    return _this.eventCallback('endOfTurn', event);
+  });
   this.updateEvents();
   this.setOrientation();
   return this;
@@ -379,6 +364,7 @@ Chess.prototype.eventCallback = function(type, event, ui){
     case 'pieceDrop':       return this.onPieceDrop(event,ui);
     case 'cellClear':       return this.onCellClear(event);;
     case 'cellPopulate':    return this.onCellPopulate(event);
+    case 'endOfTurn':       return this.onEndOfTurn(event);
   }
 };
 // ------------------------------------------------------------
@@ -430,7 +416,12 @@ Chess.prototype.onCellPopulate = function(event){
   this.updateEvents();
   this.setOrientation();
   return true;
-}
+};
+
+Chess.prototype.onEndOfTurn = function(event){
+  this.switchSide();
+  return true;
+};
 
 // ------------------------------------------------------------
 // Helpers
