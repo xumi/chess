@@ -27,7 +27,7 @@ Chess.PIECES    = ['king','queen','tower','bishop','knight','pawn'];
 Chess.VIEW_PATH = 'scripts/chess.view';
 // ------------------------------------------------------------
 Chess.prototype.start = function(side){
-  this.view   = new ChessView(this);
+  if(!this.view) this.view = new ChessView(this);
   this.side   = side=='black'?'black':'white';
   this.degres = (this.side=='black') ? 180 : 0;
   this.addStylesheet('css/chess');
