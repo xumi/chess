@@ -1,25 +1,30 @@
-function Chess(container,side){
+function Chess(container, assetsPath, onReady){
+  var _this         = this;
   this.id           = ++Chess.ID;
   this.container    = container;
   this.currentPiece = false;
   this.currentCell  = false;
   this.initialized  = false;
   this.trash        = false;
-  this.side         = side=='black'?'black':'white';
+  this.side         = false;
   this.degres       = (this.side=='black') ? 180 : 0;
   this.counter      = 0;
   this.theme        = 'classic';
   this.loadedThemes = {};
-  this.assetsPath   = false;
+  this.assetsPath   = assetsPath;
   this.ready        = false;
+  this.addJavascript(Chess.VIEW_PATH, function(){ onReady(_this); });
 }
-Chess.DEFAULT_PIECE_SIZE = 58;
-Chess.ID      = 0;
-Chess.LETTERS = ['A','B','C','D','E','F','G','H'];
-Chess.NUMBERS = [1,2,3,4,5,6,7,8];
-Chess.PIECES  = ['king','queen','tower','bishop','knight','pawn'];
 // ------------------------------------------------------------
-Chess.prototype.paint = function(){
+Chess.DEFAULT_PIECE_SIZE = 58;
+Chess.ID        = 0;
+Chess.LETTERS   = ['A','B','C','D','E','F','G','H'];
+Chess.NUMBERS   = [1,2,3,4,5,6,7,8];
+Chess.PIECES    = ['king','queen','tower','bishop','knight','pawn'];
+Chess.VIEW_PATH = 'scripts/chess.view';
+// ------------------------------------------------------------
+Chess.prototype.start = function(side){
+  this.side = side=='black'?'black':'white';
   this.addStylesheet('css/chess');
   this.refreshClasses();
   var current = 'odd';
@@ -457,8 +462,8 @@ Chess.prototype.addStylesheetTag = function(path){
 };
 // ------------------------------------------------------------
 (function($) {
-  $.fn.chess = function(side) {
-    return new Chess($(this),side);
+  $.fn.chess = function(assetsPath, onReady) {
+    return new Chess($(this),assetsPath, onReady);
   }
 })(jQuery);
 

@@ -9,16 +9,20 @@
     <script type="text/javascript">
     $(function(){
 
+      // ------------------------------------------------------------------------
       // This is the example
-      var chessBoard = $('#container').chess() // Create the chess object
-                                      .setAssetsPath('./') // Mandatory
-                                      .setTheme('classic') // Optional (default: classic)
-                                      .paint(); // Mandatory
-
+      var assetsPath = './'; // To give the files context to the app
+      var chessBoard = $('#container').chess(assetsPath,function(board){
+        board.setTheme('modern')  // Optional (default: classic)
+             .start('white');     // Start the app (White player starts)
+      });
+      
+      // ------------------------------------------------------------------------
       // Below this line there is just "example" logic
       $('#switchTheme').click(function(){
         var t = chessBoard.theme=='classic'?'modern':'classic';
         chessBoard.setTheme(t).applyTheme();
+        $('#currentTheme').text(t);
       });
       
     });
@@ -30,7 +34,7 @@
     <hr />
     <label for="switchTheme">Demo:</label>
     <button id="switchTheme">Switch Theme</button>
-    <div id="currentTheme"></div>
+    (<span id="currentTheme">modern</span>)
     <hr />
     <div id="container"></div>
   </body>
