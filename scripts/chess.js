@@ -74,12 +74,7 @@ Chess.prototype.applyTheme = function(t){
   this.refreshClasses();
   return this;
 };
-  
-Chess.prototype.updated = function(){
-  socket.broadcast.emit('update',this.serialize());
-  return this;
-};
-  
+    
 Chess.prototype.addHelper = function(){
   var html = '<div class="helper">';
   var _this = this;
