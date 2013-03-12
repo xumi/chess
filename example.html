@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chess - How To</title>
+  	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/jquery-ui.js"></script>
+    <script type="text/javascript" src="./scripts/chess.js"></script>
+    
+    <script type="text/javascript">
+    $(function(){
+
+      // This is the example
+      var chessBoard = $('#container').chess() // Create the chess object
+                                      .setAssetsPath('./') // Mandatory
+                                      .setTheme('classic') // Optional (default: classic)
+                                      .paint(); // Mandatory
+
+      // Below this line there is just "example" logic
+      $('#switchTheme').click(function(){
+        var t = chessBoard.theme=='classic'?'modern':'classic';
+        chessBoard.setTheme(t).applyTheme();
+      });
+      
+    });
+    </script>
+    
+  </head>
+  <body>
+    <h1>Simple Chess Board Example</h1>
+    <hr />
+    <label for="switchTheme">Demo:</label>
+    <button id="switchTheme">Switch Theme</button>
+    <div id="currentTheme"></div>
+    <hr />
+    <div id="container"></div>
+  </body>
+</html>
