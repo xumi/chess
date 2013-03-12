@@ -13,7 +13,11 @@ function Chess(container, assetsPath, onReady){
   this.loadedThemes = {};
   this.assetsPath   = assetsPath;
   this.ready        = false;
-  this.addJavascript(Chess.VIEW_PATH, function(){ onReady(_this); });
+  this.addJavascript(Chess.VIEW_PATH, function(){
+    onReady(_this); 
+  }).fail(function(jqxhr, settings, exception) {
+    console.log('Something went wrong while loading the view: '+exception);
+  });;
 }
 // ------------------------------------------------------------
 Chess.DEFAULT_PIECE_SIZE = 58;
@@ -24,26 +28,11 @@ Chess.PIECES    = ['king','queen','tower','bishop','knight','pawn'];
 Chess.VIEW_PATH = 'scripts/chess.view';
 // ------------------------------------------------------------
 Chess.prototype.start = function(side){
+  this.view = new ChessView(this);
   this.side = side=='black'?'black':'white';
   this.addStylesheet('css/chess');
   this.refreshClasses();
-  var current = 'odd';
-  var html  = '<div class="cells">';
-  var bottom   = 0;
-  var left  = 0;
-  for(var i=1;i<=64;i++){
-    html += '<div class="cell '+current+'" style="left:'+left+'%;bottom:'+bottom+'%;">';
-    html +=   '<div class="pieces"></div>';
-    html += '</div>';
-    current = current=='odd'?'even':'odd';
-    if(i%8==0){
-      current = current=='odd'?'even':'odd';
-      bottom += 12.5;
-      left = 0;
-    }else left += 12.5;
-  }
-  html += '</div>';
-  this.container.html(html);
+  this.view.appendHTML();
   this.addHelper();
   this.addPieces();
   this.addEvents();
@@ -452,7 +441,7 @@ Chess.prototype.onCellPopulate = function(event){
 // Helpers
 // ------------------------------------------------------------
 Chess.prototype.addJavascript = function(script, callback){
-  jQuery.getScript(this.assetsPath+script+'.js',callback);
+  return jQuery.getScript(this.assetsPath+script+'.js',callback);
 };
 Chess.prototype.addStylesheet = function(css){
   this.addStylesheetTag(this.assetsPath+css)
