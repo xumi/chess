@@ -41,5 +41,28 @@ ChessView.prototype.addHelper = function(){
   // End of turn button (switching side)
   html += '<button class="endOfTurn">End of Turn</button>';
   this.controller.container.append(html);
+};
+ChessView.prototype.createCellMenu = function(){
+  var controller = this.controller;
+  var html = '<div class="cellmenu"><div class="background"></div><div class="content"></div></div>';
+  controller.container.append(html);
+  var cellmenu = controller.container.find('.cellmenu');
+  html = '';
+  html += '<div class="clear">';
+  html += '<button data-action="clear">Clear</button>';
+  html += '</div>';
+  html += '<div class="change">';
+  html += '<h3>Or Set</h3>'
+  $(['white','black']).each(function(){
+    var side = this;
+    html += '<div class="side '+side+'">';
+    $(controller.playablePieces()).each(function(){
+      html += '<div class="piece '+this+' '+side+'" data-alias="'+this+'" data-side="'+side+'" title="'+this+'"></div>';
+    });
+    html += '</div>';
+  })
+  html += '</div>';
+  cellmenu.find('.content').html(html);
+  return this;
 }
 // ------------------------------------------------------------

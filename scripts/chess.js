@@ -137,32 +137,14 @@ Chess.prototype.openCellMenu = function(){
   
 Chess.prototype.createCellMenu = function(){
   var _this = this;
-  this.container.append('<div class="cellmenu"><div class="background"></div><div class="content"></div></div>');
-  var cellmenu = this.container.find('.cellmenu');
-  var cellmenuContent = cellmenu.find('.content');
+  this.view.createCellMenu();
+  var cellmenuContent = this.container.find('.cellmenu .content');
   cellmenuContent.on('click','.clear button',function(event){
     _this.eventCallback('cellClear', event);
   });
   cellmenuContent.on('click','.piece',function(event){
     _this.eventCallback('cellPopulate', event);    
   });
-    
-  var html = '';
-  html += '<div class="clear">';
-  html += '<button data-action="clear">Clear</button>';
-  html += '</div>';
-  html += '<div class="change">';
-  html += '<h3>Or Set</h3>'
-  $(['white','black']).each(function(){
-    var side = this;
-    html += '<div class="side '+side+'">';
-    $(_this.playablePieces()).each(function(){
-      html += '<div class="piece '+this+' '+side+'" data-alias="'+this+'" data-side="'+side+'" title="'+this+'"></div>';
-    });
-    html += '</div>';
-  })
-  html += '</div>';
-  cellmenu.find('.content').html(html).end();
   return this;
 }
 
