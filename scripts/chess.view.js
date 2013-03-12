@@ -11,6 +11,17 @@ ChessView.prototype.getCells = function(){
 ChessView.prototype.getPieces = function(){
   return this.getCells().find('.piece');
 };
+ChessView.prototype.movePieceToCell = function(piece, target){
+  var data = piece.data();
+  var previousCell = piece.parents('.cell');
+  piece.remove();
+  if(target.is('.cell')){
+    this.controller.setPieceOnCell(target,data);
+  }else if(target.is('.trash')){
+    this.controller.setPieceOn(this.container.trash,data);
+  }
+  this.updateCell(previousCell);
+};
 ChessView.prototype.rotate = function(degres, animate){
   if(degres==0) return;
   this.controller.degres = degres;

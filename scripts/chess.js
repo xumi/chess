@@ -153,21 +153,25 @@ Chess.prototype.addPieces = function(){
 }
   
 Chess.prototype.setOnBoard = function(data){
-  var matrix = {'A':0,'B':1,'C': 2,'D':3,'E':4,'F':5,'G':6,'H':7};
-  var tmp = data.coords.split('');
-  var letter = tmp[0];
-  var number = tmp[1];
-  var x = matrix[letter];
-  var y = parseInt(number)-1;
-  var i = (y*8)+x;
+  var cell = this.findCellByCoords(data.coords);
   var _this = this;
-  var cell = _this.container.find('.cell:eq('+i+')');
   if(data.pieces){
     $(data.pieces).each(function(){
       _this.setPieceOnCell(cell,this);
     })
   };
   return this;
+};
+
+Chess.prototype.findCellByCoords = function(coords){
+  var matrix = {'A':0,'B':1,'C': 2,'D':3,'E':4,'F':5,'G':6,'H':7};
+  var tmp = coords.split('');
+  var letter = tmp[0];
+  var number = tmp[1];
+  var x = matrix[letter];
+  var y = parseInt(number)-1;
+  var i = (y*8)+x;
+  return this.container.find('.cell:eq('+i+')');
 };
   
 Chess.prototype.clearCell = function(cell){
@@ -183,6 +187,7 @@ Chess.prototype.setPieceOnCell = function(cell, data){
 Chess.prototype.setPieceOn = function(on,data){
   var piece = this.view.setPieceOn(on,data);
   if(on.is('.cell')) this.view.updateCell(on);
+  data.id = ++this.id;
   piece.data(data);
   this.updateEvents();
   return this;
@@ -202,7 +207,6 @@ Chess.prototype.serialize = function(){
   });
   return board;
 };
-  
   
 Chess.prototype.getNumbers = function(side){
   if(!side) side = this.side
@@ -326,15 +330,7 @@ Chess.prototype.onPieceDrag = function(event,ui){
 
 Chess.prototype.onPieceDrop = function(event,ui){
   var target = $(event.target);
-  var data = this.currentPiece.data();
-  var previousCell = this.currentPiece.parents('.cell');
-  this.currentPiece.remove();
-  if(target.is('.cell')){
-    this.setPieceOnCell(target,data);
-  }else if(target.is('.trash')){
-    this.setPieceOn(this.trash,data);
-  }
-  this.view.updateCell(previousCell);
+  this.view.movePieceToCell(this.currentPiece,target);
   return true;
 };
 
